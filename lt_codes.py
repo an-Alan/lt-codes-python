@@ -8,6 +8,7 @@ import numpy as np
 import core
 from encoder import encode
 from decoder import decode
+import random
 
 def blocks_read(file, filesize):
     """ Read the given file by blocks of `core.PACKET_SIZE` and use np.frombuffer() improvement.
@@ -88,10 +89,32 @@ if __name__ == "__main__":
         print("Blocks: {}".format(file_blocks_n))
         print("Drops: {}\n".format(drops_quantity))
 
+        random.seed(30)
+
         # Generating symbols (or drops) from the blocks
         file_symbols = []
-        for curr_symbol in encode(file_blocks, drops_quantity=drops_quantity):
-            file_symbols.append(curr_symbol)
+        with open("dump.txt", 'wb') as output_f:
+            for curr_symbol in encode(file_blocks, drops_quantity=drops_quantity):
+            # if random.random() < 0.1:
+            #     curr_symbol.data[9] = ~curr_symbol.data[9]
+                
+            #     print("changed bytes")
+                # file_symbols.append(curr_symbol)
+                for char in curr_symbol.data:
+                    output_f.write(char)
+
+        with open("dump-copy.txt", 'rb') as output_f:
+            data = output_f.read(39)
+            while len(data) != 0:
+                assert len(data) == 39, f"{len(data)}"
+                file_symbols.append(core.Symbol(index=0, degree=0, data=data))
+                data = output_f.read(39)
+
+        
+            
+        #dump file_symbols into a file 'wb' write binary
+        
+            
 
         # HERE: Simulating the loss of packets?
 

@@ -1,5 +1,6 @@
 from core import *
 from distributions import *
+from reedsolo import RSCodec
 
 def get_degrees_from(distribution_name, N, k):
     """ Returns the random degrees from a given distribution of probabilities.
@@ -53,8 +54,23 @@ def encode(blocks, drops_quantity):
         for n in range(1, deg):
             drop = np.bitwise_xor(drop, blocks[selection_indexes[n]])
             # drop = drop ^ blocks[selection_indexes[n]] # according to my tests, this has the same performance
-
+            # print(drop)
         # Create symbol, then log the process
+        index = [0, 0, 0, 0]
+        counter = 0
+        while i > 0:
+            index[counter] = i%256
+            i = i // 256
+            counter += 1
+            assert counter < 4
+
+        drop = np.insert(drop, 0, index)
+        assert deg <= 255
+        drop = np.insert(drop, 0, deg)
+
+        rs_obj = RSCodec(2)
+        drop = np.frombuffer(rs_obj.encode(drop), dtype=NUMPY_TYPE)
+        
         symbol = Symbol(index=i, degree=deg, data=drop)
         
         if VERBOSE:

@@ -1,4 +1,5 @@
 from core import *
+from reedsolo import RSCodec
 
 def recover_graph(symbols, blocks_quantity):
     """ Get back the same random indexes (or neighbors), thanks to the symbol id as seed.
@@ -6,10 +7,39 @@ def recover_graph(symbols, blocks_quantity):
     """
 
     for symbol in symbols:
+        rs_obj = RSCodec(2)
+        data = symbol.data[:]
+        try:
+            symbol.data = np.frombuffer(rs_obj.decode(symbol.data)[0], dtype=NUMPY_TYPE)
+                    
+        except:
+            print("rs failed")
+            symbol.data = None #could not correct the code
+            continue
+
+            #we will encode the data again to evaluate the correctness of the decoding
+    
+        data_again = list(rs_obj.encode(symbol.data)) #cast to list to convert byte array to int
+
+        if np.count_nonzero(data != list(data_again)) > 100: #measuring hamming distance between raw input and expected raw input
+                #too many errors to correct in decoding                    
+            symbol.data = None
+            print("rs failed")
+            continue
         
-        neighbors, deg = generate_indexes(symbol.index, symbol.degree, blocks_quantity)
+        if symbol.data is None:
+            continue
+
+        index = int(symbol.data[1]) + (int(symbol.data[2]) * 256) + (int(symbol.data[3]) * 256 ** 2) + (int(symbol.data[4]) * 256 ** 3)
+
+        symbol.index = index
+        neighbors, deg = generate_indexes(symbol.index, int(symbol.data[0]), blocks_quantity)
         symbol.neighbors = {x for x in neighbors}
         symbol.degree = deg
+        symbol.data = symbol.data[5:]
+        # symbol.rs = symbol.data[-2:]
+
+
 
         if VERBOSE:
             symbol.log(blocks_quantity)
@@ -25,7 +55,7 @@ def reduce_neighbors(block_index, blocks, symbols):
     """
     
     for other_symbol in symbols:
-        if other_symbol.degree > 1 and block_index in other_symbol.neighbors:
+        if other_symbol.degree > 1 and other_symbol.data is not None and block_index in other_symbol.neighbors:
         
             # XOR the data and remove the index from the neighbors
             other_symbol.data = np.bitwise_xor(blocks[block_index], other_symbol.data)
@@ -76,6 +106,10 @@ def decode(symbols, blocks_quantity):
         # Search for solvable symbols
         for i, symbol in enumerate(symbols):
 
+            if symbol.data is None:
+                symbols.pop(i)
+                continue
+
             # Check the current degree. If it's 1 then we can recover data
             if symbol.degree == 1: 
 
@@ -100,5 +134,12 @@ def decode(symbols, blocks_quantity):
                 reduce_neighbors(block_index, blocks, symbols)
 
     print("\n----- Solved Blocks {:2}/{:2} --".format(solved_blocks_count, blocks_n))
+
+    
+    for i in range(len(blocks)):
+        if blocks[i] is None:
+            blocks[i] = [0] * 32
+
+
 
     return np.asarray(blocks), solved_blocks_count

@@ -8,22 +8,22 @@ from random import choices
 
 SYSTEMATIC = False
 VERBOSE = False
-PACKET_SIZE = 65536
+# PACKET_SIZE = 65536
 # PACKET_SIZE = 32768
 # PACKET_SIZE = 16384
 # PACKET_SIZE = 4096
 # PACKET_SIZE = 1024
 # PACKET_SIZE = 512
-# PACKET_SIZE = 128
+PACKET_SIZE = 32
 ROBUST_FAILURE_PROBABILITY = 0.01
-NUMPY_TYPE = np.uint64
+# NUMPY_TYPE = np.uint64
 # NUMPY_TYPE = np.uint32
 # NUMPY_TYPE = np.uint16
-# NUMPY_TYPE = np.uint8
+NUMPY_TYPE = np.uint8
 EPSILON = 0.0001
 
 class Symbol:
-    __slots__ = ["index", "degree", "data", "neighbors"] # fixing attributes may reduce memory usage
+    __slots__ = ["index", "degree", "data", "neighbors", "rs"] # fixing attributes may reduce memory usage
 
     def __init__(self, index, degree, data):
         self.index = index
