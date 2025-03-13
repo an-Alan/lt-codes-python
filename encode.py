@@ -7,7 +7,6 @@ import argparse
 import numpy as np
 import core
 from encoder import encode
-from decoder import decode
 import random
 
 def blocks_read(file, filesize):
@@ -77,6 +76,8 @@ def encode_file(filename, redundancy):
             
     print(f"file_blocks_n = {file_blocks_n}")
     print(f"finished encoding, dumped data into {filename}.bin")
+    return(file_blocks_n)
+    
 
 
 #########################################################
